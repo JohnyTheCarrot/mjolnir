@@ -339,10 +339,14 @@ namespace mjolnir {
 
         void print_header() const {
             auto const &characters{get_characters()};
+            auto const line{report_->source_->get_line_info(report_->start_pos_)
+            };
+            auto const line_nr{line->line_number_};
+            auto const col{line->get_column(report_->start_pos_)};
 
             *os_ << line_number_space_ << characters.line_top_left_
                  << characters.horizontal_bar_ << characters.box_left_
-                 << report_->span_.to_string(report_->source_->get_name())
+                 << report_->source_->get_name() << ':' << line_nr << ':' << col
                  << characters.box_right_;
             end_line();
         }
@@ -389,11 +393,11 @@ namespace mjolnir {
 
     Report::Report(
             ReportKind kind, Source const &source, std::string message,
-            Span const &span
+            std::size_t start_pos
     )
         : kind_{std::move(kind)}
         , message_{std::move(message)}
-        , span_{span}
+        , start_pos_{start_pos}
         , source_{&source} {
     }
 

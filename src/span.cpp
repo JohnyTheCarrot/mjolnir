@@ -25,10 +25,6 @@ namespace mjolnir {
         return end_;
     }
 
-    std::string Span::to_string(std::string_view file_name) const {
-        return std::format("{}:{}:{}", file_name, start_, end_);
-    }
-
     bool Span::operator==(Span const &other) const noexcept {
         return start_ == other.start_ && end_ == other.end_;
     }

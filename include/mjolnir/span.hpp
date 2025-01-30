@@ -30,9 +30,6 @@ namespace mjolnir {
         std::size_t end() const noexcept;
 
         [[nodiscard]]
-        std::string to_string(std::string_view file_name) const;
-
-        [[nodiscard]]
         bool operator==(Span const &other) const noexcept;
 
         [[nodiscard]]

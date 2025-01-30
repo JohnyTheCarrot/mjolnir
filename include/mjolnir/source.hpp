@@ -54,6 +54,9 @@ namespace mjolnir {
 
         [[nodiscard]]
         Span get_subspan(Span const &span) const noexcept;
+
+        [[nodiscard]]
+        std::size_t get_column(std::size_t offset) const noexcept;
     };
 
     namespace internal {

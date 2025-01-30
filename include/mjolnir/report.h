@@ -36,7 +36,7 @@ namespace mjolnir {
     class Report final {
         ReportKind    kind_;
         std::string   message_;
-        Span          span_;
+        std::size_t   start_pos_;
         Source const *source_;
 
         std::optional<std::string> code_;
@@ -52,7 +52,7 @@ namespace mjolnir {
 
     public:
         Report(ReportKind kind, Source const &source, std::string message,
-               Span const &span);
+               std::size_t start_pos);
 
         Report &with_code(std::string code);
 

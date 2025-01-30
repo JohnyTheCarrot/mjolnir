@@ -3,10 +3,8 @@
 
 void print_warning(mjolnir::Source const &source) {
     mjolnir::Report report{
-            mjolnir::BasicReportKind::Warning,
-            source,
-            "Dereference on a null pointer",
-            {6, 4}// for now takes {line, column}
+            mjolnir::BasicReportKind::Warning, source,
+            "Dereference on a null pointer", 75
     };
     report.with_code("W16")
             // a label without a message will just include the line
@@ -29,10 +27,8 @@ void print_warning(mjolnir::Source const &source) {
 
 void print_error(mjolnir::Source const &source) {
     mjolnir::Report report{
-            mjolnir::BasicReportKind::Error,
-            source,
-            "Shift operation on non-integral type(s)",
-            {1, 12}
+            mjolnir::BasicReportKind::Error, source,
+            "Shift operation on non-integral type(s)", 12
     };
     report.with_label(
                   mjolnir::Label{{12, 13}}

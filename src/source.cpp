@@ -51,6 +51,10 @@ namespace mjolnir {
         return Span{start, end};
     }
 
+    std::size_t Line::get_column(std::size_t offset) const noexcept {
+        return offset - byte_offset_;
+    }
+
     bool internal::SpannedLine::operator==(SpannedLine const &other) const {
         return line_ == other.line_ && spans_ == other.spans_;
     }
