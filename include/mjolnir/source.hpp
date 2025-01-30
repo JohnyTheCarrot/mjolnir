@@ -66,6 +66,12 @@ namespace mjolnir {
 
             [[nodiscard]]
             bool operator<(SpannedLine const &other) const;
+
+            [[nodiscard]]
+            bool has_highlightable_span() const noexcept;
+
+            [[nodiscard]]
+            std::size_t max_span_end() const;
         };
     }// namespace internal
 

@@ -52,6 +52,16 @@ namespace mjolnir {
 
             [[nodiscard]]
             bool operator<(ColoredSpan const &other) const;
+
+            [[nodiscard]]
+            std::size_t center_offset() const noexcept;
+
+            [[nodiscard]]
+            bool is_highlight() const;
+
+            [[nodiscard]]
+            bool
+            is_single_line_highlightable(Source const &source) const noexcept;
         };
     }// namespace internal
 }// namespace mjolnir

@@ -45,9 +45,10 @@ namespace mjolnir {
         std::vector<Label>         labels_;
         ReportConfig               config_{};
 
-
         [[nodiscard]]
-        std::set<internal::SpannedLine> get_spanned_lines() const;
+        std::set<Line> get_lines() const;
+
+        friend class ReportPrinter;
 
     public:
         Report(ReportKind kind, Source const &source, std::string message,

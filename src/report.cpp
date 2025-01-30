@@ -39,69 +39,353 @@ namespace mjolnir {
         }
     }// namespace report_kind
 
-    std::set<internal::SpannedLine> Report::get_spanned_lines() const {
-        std::set<internal::SpannedLine> spanned_lines{};
-
-        auto const get_spanned_line{[&](Label const &label, Line const &line) {
-            auto const span{label.get_span()};
-            auto [it, _]{spanned_lines.emplace(internal::SpannedLine{line, {}})
-            };
-
-            auto extracted{spanned_lines.extract(it)};
-
-            auto &spans{extracted.value().spans_};
-
-            internal::ColoredSpan label_span{line.get_subspan(span), &label};
-            spans.emplace(label_span);
-
-            spanned_lines.insert(std::move(extracted));
-        }};
+    std::set<Line> Report::get_lines() const {
+        std::set<Line> lines{};
         for (auto const &label : labels_) {
-            auto const span{label.get_span()};
-            auto const start_line{source_->get_line_info(span.start()).value()};
-            auto const end_line{source_->get_line_info(span.end()).value()};
-            get_spanned_line(label, start_line);
-            get_spanned_line(label, end_line);
+            if (auto const startLine{
+                        source_->get_line_info(label.get_span().start())
+                };
+                startLine.has_value())
+                lines.emplace(startLine.value());
+
+            if (auto const endLine{source_->get_line_info(label.get_span().end()
+                )};
+                endLine.has_value())
+                lines.emplace(endLine.value());
         }
 
-        // add the uncolored lines
-        for (auto &line : spanned_lines) {
-            auto  spans_copy{line.spans_};
-            auto  extracted{spanned_lines.extract(line)};
-            auto &spans{extracted.value().spans_};
-            auto  span_start{line.line_.byte_offset_};
-            auto  last_start{span_start};
+        return lines;
+    }
 
-            for (auto it{spans_copy.cbegin()}; it != spans_copy.cend(); ++it) {
+    class ReportPrinter final {
+        static constexpr auto line_number_padding_before{1};
+        static constexpr auto line_number_padding_after{1};
+        static constexpr auto padding_after_vert_bar{1};
+        static constexpr auto padding_past_max{2};
+
+        std::ostream  *os_;
+        Report const  *report_;
+        std::set<Line> lines_{report_->get_lines()};
+        std::size_t    max_line_nr_len_{[this] {
+            auto const max_line = std::ranges::max_element(
+                    std::as_const(lines_),
+                    [](Line const &lhs, Line const &rhs) { return lhs < rhs; }
+            );
+            assert(max_line != lines_.cend());// should not be possible
+
+            return std::to_string(max_line->line_number_).size();
+        }()};
+        std::string    line_number_space_{[this] {
+            return std::string(
+                    line_number_padding_before + max_line_nr_len_ +
+                            line_number_padding_after,
+                    ' '
+            );
+        }()};
+        std::string    padding_after_vert_bar_str_{
+                std::string(padding_after_vert_bar, ' ')
+        };
+
+        [[nodiscard]]
+        Characters const &get_characters() const noexcept {
+            return report_->config_.characters;
+        }
+
+        [[nodiscard]]
+        std::set<internal::SpannedLine> get_spanned_lines() const {
+            std::set<internal::SpannedLine> spanned_lines{};
+
+            auto const get_spanned_line{[&](Label const &label,
+                                            Line const  &line) {
+                auto const span{label.get_span()};
+                auto [it,
+                      _]{spanned_lines.emplace(internal::SpannedLine{line, {}})
+                };
+
+                auto extracted{spanned_lines.extract(it)};
+
+                auto &spans{extracted.value().spans_};
+
+                internal::ColoredSpan label_span{
+                        line.get_subspan(span), &label
+                };
+                spans.emplace(label_span);
+
+                spanned_lines.insert(std::move(extracted));
+            }};
+            for (auto const &label : report_->labels_) {
+                auto const span{label.get_span()};
+                auto const start_line{
+                        report_->source_->get_line_info(span.start()).value()
+                };
+                auto const end_line{
+                        report_->source_->get_line_info(span.end()).value()
+                };
+                get_spanned_line(label, start_line);
+                get_spanned_line(label, end_line);
+            }
+
+            // add the uncolored lines
+            for (auto &line : spanned_lines) {
+                auto  spans_copy{line.spans_};
+                auto  extracted{spanned_lines.extract(line)};
+                auto &spans{extracted.value().spans_};
+                auto  span_start{line.line_.byte_offset_};
+                auto  last_start{span_start};
+
+                for (auto it{spans_copy.cbegin()}; it != spans_copy.cend();
+                     ++it) {
+                    internal::ColoredSpan const after_span{
+                            {last_start, span_start}, nullptr
+                    };
+                    if (!after_span.span_.empty())
+                        spans.emplace(after_span);
+
+                    internal::ColoredSpan const before_span{
+                            {span_start, it->span_.start()}, nullptr
+                    };
+
+                    if (!before_span.span_.empty()) {
+                        spans.emplace(before_span);
+                    }
+
+                    last_start = span_start;
+                    span_start = it->span_.end();
+                }
+
                 internal::ColoredSpan const after_span{
-                        {last_start, span_start}, nullptr
+                        {span_start, line.line_.end()}, nullptr
                 };
                 if (!after_span.span_.empty())
                     spans.emplace(after_span);
 
-                internal::ColoredSpan const before_span{
-                        {span_start, it->span_.start()}, nullptr
-                };
-
-                if (!before_span.span_.empty()) {
-                    spans.emplace(before_span);
-                }
-
-                last_start = span_start;
-                span_start = it->span_.end();
+                spanned_lines.insert(std::move(extracted));
             }
 
-            internal::ColoredSpan const after_span{
-                    {span_start, line.line_.end()}, nullptr
-            };
-            if (!after_span.span_.empty())
-                spans.emplace(after_span);
-
-            spanned_lines.insert(std::move(extracted));
+            return spanned_lines;
         }
 
-        return spanned_lines;
-    }
+        void print_line_start(std::size_t line_nr) const {
+            auto const &characters{get_characters()};
+
+            *os_ << std::string(line_number_padding_before, ' ')
+                 << std::format("{: >{}}", line_nr, max_line_nr_len_)
+                 << std::string(line_number_padding_after, ' ')
+                 << characters.vertical_bar_ << padding_after_vert_bar_str_;
+        }
+
+        void print_non_code_line_start() const {
+            auto const &characters{get_characters()};
+
+            *os_ << line_number_space_ << rang::fg::gray
+                 << characters.vertical_interruption_ << rang::fg::reset
+                 << padding_after_vert_bar_str_;
+        }
+
+        void print_line_segment(
+                Line const &line, internal::ColoredSpan const &colored_span
+        ) const {
+            auto const &[span, label_ptr]{colored_span};
+
+            auto const content{report_->source_->get_line(line, span)};
+            if (label_ptr == nullptr) {
+                *os_ << content;
+                return;
+            }
+
+            *os_ << label_ptr->get_display().color_ << content
+                 << rang::fg::reset;
+        }
+
+        void print_highlight(internal::ColoredSpan const &colored_span) const {
+            auto const &characters{get_characters()};
+            auto const &[span, label_ptr]{colored_span};
+            auto const highlight_size{colored_span.center_offset()};
+            auto const highlight_left{[&] {
+                std::string highlight{};
+                highlight.reserve(
+                        characters.highlight_.size() * highlight_size
+                );
+
+                for (std::size_t i{0}; i < highlight_size; ++i) {
+                    highlight += characters.highlight_;
+                }
+
+                return highlight;
+            }()};
+            auto const highlight_right{[&] {
+                std::string highlight{highlight_left};
+                if (span.size() % 2 == 0) {
+                    highlight += characters.highlight_;
+                }
+
+                return highlight;
+            }()};
+
+            *os_ << label_ptr->get_display().color_ << highlight_left
+                 << characters.highlight_center_ << highlight_right
+                 << rang::fg::reset;
+        }
+
+        void
+        print_highlight_lines(internal::SpannedLine const &spanned_line) const {
+            auto const &characters{get_characters()};
+            auto const &[line, colored_spans]{spanned_line};
+
+            int line_pos{0};
+            for (auto span_it{colored_spans.cbegin()};
+                 span_it != colored_spans.cend(); ++span_it) {
+                auto const &[span, label_ptr]{*span_it};
+
+                if (!span_it->is_single_line_highlightable(*report_->source_)) {
+                    line_pos += span.size();
+                    continue;
+                }
+
+                print_non_code_line_start();
+
+                {
+                    auto const center_offset{span_it->center_offset()};
+                    *os_ << std::string(line_pos + center_offset, ' ');
+                    line_pos += span_it->span_.size();
+
+                    auto const &display{label_ptr->get_display()};
+                    *os_ << display.color_ << characters.line_bottom_left_;
+
+                    auto const max_span_end{spanned_line.max_span_end()};
+                    for (auto current_offset{line_pos};
+                         current_offset <
+                         max_span_end + span_it->center_offset() -
+                                 span_it->span_.size() % 2 + padding_past_max;
+                         ++current_offset) {
+                        *os_ << characters.horizontal_bar_;
+                    }
+
+                    if (display.message_.has_value()) {
+                        *os_ << rang::fg::reset << ' '
+                             << display.message_.value();
+                    }
+                }
+
+                end_line();
+
+                print_non_code_line_start();
+
+                int rest_line_padding{line_pos};
+                for (auto rest_it{std::next(span_it)};
+                     rest_it != colored_spans.cend(); ++rest_it) {
+                    auto const &[rest_span, rest_label_ptr]{*rest_it};
+                    if (!rest_it->is_single_line_highlightable(*report_->source_
+                        )) {
+                        rest_line_padding += rest_span.size();
+                        continue;
+                    }
+
+                    auto const center_offset{rest_it->center_offset()};
+                    *os_ << std::string(rest_line_padding + center_offset, ' ');
+                    rest_line_padding = rest_span.size() - 1;
+
+                    *os_ << rest_label_ptr->get_display().color_
+                         << characters.vertical_bar_;
+                }
+                end_line();
+            }
+        }
+
+        void print_highlights(internal::SpannedLine const &spanned_line) const {
+            auto const &[line, colored_spans]{spanned_line};
+
+            if (!spanned_line.has_highlightable_span())
+                return;
+
+            print_non_code_line_start();
+
+            std::size_t highlight_start{0};
+            for (auto const &colored_span : colored_spans) {
+                auto const &[span, label_ptr]{colored_span};
+
+                if (!colored_span.is_single_line_highlightable(*report_->source_
+                    )) {
+                    highlight_start += span.size();
+                    continue;
+                }
+
+                *os_ << std::string(highlight_start, ' ');
+                highlight_start = 0;
+                print_highlight(colored_span);
+            }
+            end_line();
+            print_highlight_lines(spanned_line);
+        }
+
+        void print_line(internal::SpannedLine const &spanned_line) const {
+            for (auto const &[line, colored_spans]{spanned_line};
+                 auto const &colored_span : colored_spans) {
+                print_line_segment(line, colored_span);
+            }
+
+            end_line();
+        }
+
+        void end_line() const {
+            *os_ << '\n';
+        }
+
+    public:
+        ReportPrinter(std::ostream &os, Report const &report)
+            : os_{&os}
+            , report_{&report} {
+        }
+
+        void print_header() const {
+            auto const &characters{get_characters()};
+
+            *os_ << line_number_space_ << characters.line_top_left_
+                 << characters.horizontal_bar_ << characters.box_left_
+                 << report_->span_.to_string(report_->source_->get_name())
+                 << characters.box_right_;
+            end_line();
+        }
+
+        void print_footer() const {
+            auto const &characters{get_characters()};
+            print_non_code_line_start();
+            end_line();
+
+            for (int i{0}; i < line_number_padding_before + max_line_nr_len_ +
+                                       line_number_padding_after;
+                 ++i) {
+                *os_ << characters.horizontal_bar_;
+            }
+
+            *os_ << characters.line_bottom_right_;
+            end_line();
+        }
+
+        void print_empty_line() const {
+            auto const &characters{get_characters()};
+
+            *os_ << line_number_space_ << characters.vertical_bar_ << '\n';
+        }
+
+        void print_lines() const {
+            auto const spanned_lines{get_spanned_lines()};
+
+            for (auto const &spanned_line : spanned_lines) {
+                print_line_start(spanned_line.line_.line_number_);
+                print_line(spanned_line);
+                print_highlights(spanned_line);
+            }
+        }
+
+        void print_help() const {
+            for (auto const &help : report_->help_) {
+                print_non_code_line_start();
+                *os_ << rang::fg::cyan << "Help: " << rang::fg::reset << help;
+                end_line();
+            }
+        }
+    };
 
     Report::Report(
             ReportKind kind, Source const &source, std::string message,
@@ -149,195 +433,11 @@ namespace mjolnir {
         }
         os << kind << rang::fg::reset << ": " << message_ << '\n';
 
-        std::set<Line> lines{};
-        for (auto const &label : labels_) {
-            if (auto const startLine{
-                        source_->get_line_info(label.get_span().start())
-                };
-                startLine.has_value())
-                lines.emplace(startLine.value());
-
-            if (auto const endLine{source_->get_line_info(label.get_span().end()
-                )};
-                endLine.has_value())
-                lines.emplace(endLine.value());
-        }
-
-        auto const max_line = std::ranges::max_element(
-                std::as_const(lines),
-                [](Line const &lhs, Line const &rhs) { return lhs < rhs; }
-        );
-        assert(max_line != lines.cend());// should not be possible
-        constexpr auto padding_after_line_number{1};
-        constexpr auto padding_after_vert_bar{1};
-        auto const     padding{std::to_string(max_line->byte_offset_).size()};
-
-        std::string const line_number_padding(
-                padding + padding_after_line_number, ' '
-        );
-
-        os << line_number_padding << characters.line_top_left_
-           << characters.horizontal_bar_ << characters.box_left_
-           << span_.to_string(source_->get_name()) << characters.box_right_
-           << '\n';
-
-        os << line_number_padding << characters.vertical_bar_ << '\n';
-
-        auto const        spanned_lines{get_spanned_lines()};
-        std::string const line_start{
-                line_number_padding + characters.vertical_bar_ +
-                std::string(padding_after_vert_bar, ' ')
-        };
-
-        for (auto it{spanned_lines.cbegin()}; it != spanned_lines.cend();
-             ++it) {
-            auto const &[line, spans]{*it};
-
-            os << std::format("{: >{}}", line.line_number_, padding)
-               << std::string(padding_after_line_number, ' ')
-               << characters.vertical_bar_
-               << std::string(padding_after_vert_bar, ' ');
-            for (auto const &[span, label_ptr] : spans) {
-                auto const content{source_->get_line(line, span)};
-                if (label_ptr == nullptr) {
-                    os << content;
-                    continue;
-                }
-
-                os << label_ptr->get_display().color_ << content
-                   << rang::fg::reset;
-            }
-            os << '\n';
-
-            std::vector<std::string> lines_and_messages{};
-
-            std::string highlight_padding{
-                    line_number_padding + characters.vertical_bar_ +
-                    std::string(padding_after_vert_bar, ' ')
-            };
-            highlight_padding.reserve(line.byte_length_);
-            bool        has_written_highlight{false};
-            std::size_t max_span_end{0};
-
-            for (auto const &[span, label_ptr] : spans) {
-                if (label_ptr == nullptr ||
-                    label_ptr->get_span().is_multiline(*source_)) {
-                    highlight_padding += std::string(span.size(), ' ');
-                    continue;
-                }
-
-                max_span_end = std::max(
-                        max_span_end,
-                        line.byte_length_ - (line.end() - span.end())
-                );
-                has_written_highlight = true;
-                os << rang::fg::gray << highlight_padding << rang::fg::reset;
-                highlight_padding.clear();
-                auto const highlight_size{
-                        std::max(static_cast<int>(span.size()) / 2 - 1, 0)
-                };
-                std::string highlight;
-                highlight.reserve(
-                        characters.highlight_.size() * highlight_size
-                );
-                for (std::size_t i{0}; i < highlight_size; ++i) {
-                    highlight += characters.highlight_;
-                }
-
-                os << label_ptr->get_display().color_ << highlight
-                   << characters.highlight_center_ << highlight;
-
-                if (span.size() % 2 == 0) {
-                    os << characters.highlight_;
-                }
-                os << rang::fg::reset;
-            }
-            if (has_written_highlight) {
-                os << '\n' << rang::fg::gray << line_start << rang::fg::reset;
-
-                int         index{0};
-                std::string line_padding{};
-                for (auto span_it{spans.cbegin()}; span_it != spans.cend();
-                     ++span_it) {
-                    auto const &[span, label_ptr]{*span_it};
-
-                    if (label_ptr == nullptr ||
-                        label_ptr->get_span().is_multiline(*source_)) {
-                        std::string current_line_padding(span.size(), ' ');
-                        line_padding += current_line_padding;
-                        os << current_line_padding;
-                        continue;
-                    }
-
-                    auto const highlight_center_offset{
-                            std::max(static_cast<int>(span.size()) / 2, 0)
-                    };
-                    std::string current_highlight_offset_str(
-                            highlight_center_offset, ' '
-                    );
-                    os << current_highlight_offset_str
-                       << label_ptr->get_display().color_
-                       << characters.line_bottom_left_;
-                    if (span_it == spans.cend()) {
-                        break;
-                    }
-                    for (auto current_offset{
-                                 line_padding.size() + highlight_center_offset
-                         };
-                         current_offset < max_span_end; ++current_offset) {
-                        os << characters.horizontal_bar_;
-                    }
-
-                    if (label_ptr->get_display().message_.has_value()) {
-                        os << rang::fg::reset << ' '
-                           << label_ptr->get_display().message_.value();
-                    }
-
-                    os << '\n'
-                       << rang::fg::gray << line_start << rang::fg::reset
-                       << line_padding << current_highlight_offset_str;
-
-                    bool did_draw_lines{false};
-                    for (auto rest_it{std::next(span_it)};
-                         rest_it != spans.cend(); ++rest_it) {
-                        auto const &[rest_span, rest_label_ptr]{*rest_it};
-                        if (rest_label_ptr == nullptr ||
-                            rest_label_ptr->get_span().is_multiline(*source_)) {
-                            os << std::string(rest_span.size(), ' ');
-                            continue;
-                        }
-                        did_draw_lines = true;
-
-                        auto const highlight_center_offset{std::max(
-                                static_cast<int>(rest_span.size()) / 2, 0
-                        )};
-                        os << std::string(highlight_center_offset, ' ');
-                        os << rest_label_ptr->get_display().color_
-                           << characters.vertical_bar_;
-                    }
-                    if (did_draw_lines) {
-                        os << '\n'
-                           << rang::fg::gray << line_start << rang::fg::reset
-                           << line_padding << current_highlight_offset_str;
-                    }
-
-                    ++index;
-                }
-                os << '\n';
-            }
-        }
-        os << line_number_padding << characters.vertical_bar_ << '\n';
-
-        // TODO: help, etc
-        for (auto const &help : help_) {
-            os << rang::fg::gray << line_start << rang::fg::cyan
-               << "Help: " << rang::fg::reset << help << '\n';
-        }
-
-        for (int i{0}; i < padding + 1; ++i) {
-            os << characters.horizontal_bar_;
-        }
-
-        os << characters.line_bottom_right_ << '\n';
+        ReportPrinter const printer{os, *this};
+        printer.print_header();
+        printer.print_empty_line();
+        printer.print_lines();
+        printer.print_help();
+        printer.print_footer();
     }
 }// namespace mjolnir

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <format>
 #include <mjolnir/source.hpp>
 #include <mjolnir/span.hpp>
@@ -53,6 +54,26 @@ namespace mjolnir {
 
         bool ColoredSpan::operator<(ColoredSpan const &other) const {
             return span_ < other.span_;
+        }
+
+        std::size_t ColoredSpan::center_offset() const noexcept {
+            auto const size_float{static_cast<float>(span_.size())};
+            auto const ceiled_half_size{
+                    static_cast<int>(std::ceil(size_float / 2.f))
+            };
+
+            return std::max(ceiled_half_size - 1, 0);
+        }
+
+        bool ColoredSpan::is_highlight() const {
+            return label_ptr_ != nullptr &&
+                   label_ptr_->get_display().message_.has_value();
+        }
+
+        bool ColoredSpan::is_single_line_highlightable(
+                Source const &source
+        ) const noexcept {
+            return label_ptr_ != nullptr && !span_.is_multiline(source);
         }
     }// namespace internal
 }// namespace mjolnir

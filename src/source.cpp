@@ -59,6 +59,29 @@ namespace mjolnir {
         return line_ < other.line_;
     }
 
+    bool internal::SpannedLine::has_highlightable_span() const noexcept {
+        return std::ranges::any_of(spans_, [](ColoredSpan const &coloredSpan) {
+            return coloredSpan.is_highlight();
+        });
+    }
+
+    std::size_t internal::SpannedLine::max_span_end() const {
+        auto const max_span_end{[this] {
+            std::size_t max{0};
+
+            for (auto const &span : spans_) {
+                if (!span.is_highlight())
+                    continue;
+
+                max = std::max(max, span.span_.end());
+            }
+
+            return max;
+        }()};
+
+        return max_span_end - line_.byte_offset_;
+    }
+
     Source::Source(std::string name, std::string buffer)
         : name_{std::move(name)}
         , buffer_{std::move(buffer)}
@@ -68,20 +91,26 @@ namespace mjolnir {
             auto last{buffer_.cbegin()};
 
             for (auto it{buffer_.cbegin()}; it != buffer_.cend(); ++it) {
-                if (*it == '\n') {
-                    auto const old_offset{std::distance(buffer_.cbegin(), last)
-                    };
-                    auto const length{std::distance(last, it)};
-                    lines.emplace_back(
-                            Line{.byte_offset_ =
-                                         static_cast<std::size_t>(old_offset),
-                                 .byte_length_ =
-                                         static_cast<std::size_t>(length),
-                                 .line_number_ = lines.size() + 1}
-                    );
+                std::string::const_iterator line_it;
 
-                    last = it + 1;
+                if (*it == '\n') {
+                    line_it = it;
+                } else if (std::next(it) == buffer_.cend()) {
+                    line_it = buffer_.cend();
+                } else {
+                    continue;
                 }
+
+                auto const old_offset{std::distance(buffer_.cbegin(), last)};
+                auto const length{std::distance(last, line_it)};
+                lines.emplace_back(
+                        Line{.byte_offset_ =
+                                     static_cast<std::size_t>(old_offset),
+                             .byte_length_ = static_cast<std::size_t>(length),
+                             .line_number_ = lines.size() + 1}
+                );
+
+                last = line_it + 1;
             }
 
             return lines;
