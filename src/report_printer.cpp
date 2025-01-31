@@ -195,7 +195,8 @@ namespace mjolnir {
             for (auto rest_it{std::next(span_it)};
                  rest_it != colored_spans.cend(); ++rest_it) {
                 auto const &[rest_span, rest_label_ptr]{*rest_it};
-                if (!rest_it->is_single_line_highlightable(*report_->source_)) {
+                if (!rest_it->is_highlight() ||
+                    !rest_it->is_single_line_highlightable(*report_->source_)) {
                     rest_line_padding += rest_span.size();
                     continue;
                 }
