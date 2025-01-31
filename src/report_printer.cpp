@@ -226,7 +226,8 @@ namespace mjolnir {
         for (auto const &colored_span : colored_spans) {
             auto const &[span, label_ptr]{colored_span};
 
-            if (!colored_span.is_single_line_highlightable(*report_->source_)) {
+            if (!colored_span.is_highlight() ||
+                !colored_span.is_single_line_highlightable(*report_->source_)) {
                 highlight_start += span.size();
                 continue;
             }
