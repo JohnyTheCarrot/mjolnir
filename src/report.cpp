@@ -247,8 +247,8 @@ namespace mjolnir {
             );
         }
 
-        void print_highlight_lines(internal::SpannedLine const &spanned_line
-        ) const {
+        void
+        print_highlight_lines(internal::SpannedLine const &spanned_line) const {
             auto const &characters{get_characters()};
             auto const &[line, colored_spans]{spanned_line};
 
@@ -390,8 +390,6 @@ namespace mjolnir {
 
         void print_footer() const {
             auto const &characters{get_characters()};
-            print_non_code_line_start();
-            end_line();
 
             for (int i{0}; i < line_number_padding_before + max_line_nr_len_ +
                                        line_number_padding_after;
@@ -424,6 +422,13 @@ namespace mjolnir {
                 print_non_code_line_start();
                 *os_ << colors::light_blue.fg_start() << "Help: " << Color::end
                      << help;
+                end_line();
+            }
+
+            for (auto const &note : report_->notes_) {
+                print_non_code_line_start();
+                *os_ << colors::light_cyan.fg_start() << "Note: " << Color::end
+                     << note;
                 end_line();
             }
         }

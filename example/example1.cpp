@@ -51,7 +51,8 @@ void print_error(mjolnir::Source const &source) {
                     "Only integral types can be used as operands of a shift "
                     "operation, consider casting the operands to an integral "
                     "type."
-            );
+            )
+            .with_note("This is a hard-coded diagnostic for demo purposes.");
 
     report.print(std::cout);
 }
