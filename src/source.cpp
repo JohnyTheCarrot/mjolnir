@@ -117,7 +117,7 @@ namespace mjolnir {
             auto last{buffer_.cbegin()};
 
             for (auto it{buffer_.cbegin()}; it != buffer_.cend(); ++it) {
-                std::string::const_iterator line_it;
+                std::string_view::const_iterator line_it;
 
                 if (*it == '\n') {
                     line_it = it;
