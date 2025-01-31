@@ -12,7 +12,7 @@
 #include "span.hpp"
 
 namespace mjolnir {
-    enum class BasicReportKind { Error, Warning, Advice };
+    enum class BasicReportKind { Error, Warning, Advice, Continuation };
 
     struct CustomReportKind final {
         std::string name;
@@ -34,10 +34,10 @@ namespace mjolnir {
     };
 
     class Report final {
-        ReportKind    kind_;
-        std::string   message_;
-        std::size_t   start_pos_;
-        Source const *source_;
+        ReportKind                 kind_;
+        std::optional<std::string> message_{};
+        std::size_t                start_pos_;
+        Source const              *source_;
 
         std::optional<std::string> code_;
         std::vector<std::string>   notes_;
@@ -51,10 +51,11 @@ namespace mjolnir {
         friend class ReportPrinter;
 
     public:
-        Report(ReportKind kind, Source const &source, std::string message,
-               std::size_t start_pos);
+        Report(ReportKind kind, Source const &source, std::size_t start_pos);
 
         Report &with_code(std::string code);
+
+        Report &with_message(std::string message);
 
         Report &with_note(std::string note);
 

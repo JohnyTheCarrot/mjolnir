@@ -14,6 +14,8 @@ namespace mjolnir {
                         return rang::fg::yellow;
                     case BasicReportKind::Advice:
                         return rang::fg::cyan;
+                    default:
+                        return rang::fg::reset;
                 }
                 throw std::logic_error{"unreachable"};
             }
@@ -31,6 +33,8 @@ namespace mjolnir {
                         return "Warning";
                     case BasicReportKind::Advice:
                         return "Advice";
+                    case BasicReportKind::Continuation:
+                        return "Continuation";// not that it's used, but whatever
                 }
                 throw std::logic_error{"unreachable"};
             }
@@ -339,6 +343,24 @@ namespace mjolnir {
 
         void print_header() const {
             auto const &characters{get_characters()};
+
+            auto const color{report_kind::to_color(report_->kind_)};
+            auto const kind{report_kind::to_string(report_->kind_)};
+
+            if (std::holds_alternative<BasicReportKind>(report_->kind_) &&
+                std::get<BasicReportKind>(report_->kind_) !=
+                        BasicReportKind::Continuation) {
+                *os_ << color;
+                if (report_->code_.has_value()) {
+                    *os_ << '[' << report_->code_.value() << "] ";
+                }
+                *os_ << kind << rang::fg::reset;
+                if (report_->message_.has_value()) {
+                    *os_ << ": " << report_->message_.value();
+                }
+                end_line();
+            }
+
             auto const line{report_->source_->get_line_info(report_->start_pos_)
             };
             auto const line_nr{line->line_number_};
@@ -391,18 +413,21 @@ namespace mjolnir {
         }
     };
 
-    Report::Report(
-            ReportKind kind, Source const &source, std::string message,
-            std::size_t start_pos
-    )
+    Report::Report(ReportKind kind, Source const &source, std::size_t start_pos)
         : kind_{std::move(kind)}
-        , message_{std::move(message)}
         , start_pos_{start_pos}
         , source_{&source} {
+        if (start_pos >= source.size())
+            throw std::out_of_range{"start_pos is out of range"};
     }
 
     Report &Report::with_code(std::string code) {
         code_ = std::move(code);
+        return *this;
+    }
+
+    Report &Report::with_message(std::string message) {
+        message_ = std::move(message);
         return *this;
     }
 
@@ -417,6 +442,8 @@ namespace mjolnir {
     }
 
     Report &Report::with_label(Label label) {
+        label.get_span().verify_validity(*source_);
+
         labels_.emplace_back(std::move(label));
         return *this;
     }
@@ -428,14 +455,6 @@ namespace mjolnir {
 
     void Report::print(std::ostream &os) const {
         auto const characters{config_.characters};
-        auto const color{report_kind::to_color(kind_)};
-        auto const kind{report_kind::to_string(kind_)};
-
-        os << color;
-        if (code_.has_value()) {
-            os << '[' << code_.value() << "] ";
-        }
-        os << kind << rang::fg::reset << ": " << message_ << '\n';
 
         ReportPrinter const printer{os, *this};
         printer.print_header();

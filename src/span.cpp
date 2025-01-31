@@ -43,6 +43,14 @@ namespace mjolnir {
         return start_line->line_number_ != end_line->line_number_;
     }
 
+    void Span::verify_validity(Source const &source) const {
+        if (start_ >= source.size() || end_ > source.size() || start_ >= end_) {
+            throw std::out_of_range{
+                    "Span is out of range of the source buffer"
+            };
+        }
+    }
+
     namespace internal {
         bool ColoredSpan::operator==(ColoredSpan const &other) const {
             return span_ == other.span_ && label_ptr_ == other.label_ptr_;

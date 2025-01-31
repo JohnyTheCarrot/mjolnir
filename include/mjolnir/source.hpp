@@ -100,6 +100,9 @@ namespace mjolnir {
 
         [[nodiscard]]
         std::optional<Line> get_line_info(std::size_t offset) const;
+
+        [[nodiscard]]
+        std::size_t size() const noexcept;
     };
 }// namespace mjolnir
 

@@ -37,6 +37,8 @@ namespace mjolnir {
 
         [[nodiscard]]
         bool is_multiline(Source const &source) const noexcept;
+
+        void verify_validity(Source const &source) const;
     };
 
     namespace internal {

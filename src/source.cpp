@@ -172,6 +172,10 @@ namespace mjolnir {
 
         return *it;
     }
+
+    std::size_t Source::size() const noexcept {
+        return buffer_.size();
+    }
 }// namespace mjolnir
 
 std::size_t std::hash<mjolnir::Line>::operator()(mjolnir::Line const &line

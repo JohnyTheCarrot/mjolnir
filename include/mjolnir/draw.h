@@ -31,7 +31,7 @@ namespace mjolnir {
         Characters const unicode{
                 .horizontal_bar_        = "─",
                 .vertical_bar_          = "│",
-                .vertical_interruption_ = "╎",
+                .vertical_interruption_ = "·",
                 .crossing_              = "┼",
                 .arrow_up_              = "▲",
                 .arrow_right_           = "▶",

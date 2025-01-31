@@ -2,39 +2,44 @@
 #include <mjolnir/report.h>
 
 void print_warning(mjolnir::Source const &source) {
-    mjolnir::Report report{
-            mjolnir::BasicReportKind::Warning, source,
-            "Dereference on a null pointer", 75
-    };
+    mjolnir::Report report{mjolnir::BasicReportKind::Warning, source, 44};
     report.with_code("W16")
             // a label without a message will just include the line
-            .with_label(mjolnir::Label{{57, 70}})
-            .with_label(mjolnir::Label{{94, 95}})
+            .with_message("Dereference on a null pointer")
+            .with_label(mjolnir::Label{{26, 39}})
+            .with_label(mjolnir::Label{{63, 64}})
             .with_label(
-                    mjolnir::Label{{75, 79}}
+                    mjolnir::Label{{44, 48}}
                             .with_message("Dereference occurs here")
                             .with_color(rang::fg::cyan)
-            )
-            .with_label(
-                    mjolnir::Label{{47, 54}}
-                            .with_message("Initialized as nullptr here")
-                            .with_color(rang::fg::magenta)
-            )
-            .with_config(mjolnir::ReportConfig{mjolnir::characters::ascii});
+            );
 
     report.print(std::cout);
+
+
+    std::string buffer{"float *ptr = nullptr;"};
+
+    mjolnir::Source const other_source{"incl.h", std::move(buffer)};
+    mjolnir::Report       other_file_report{
+            mjolnir::BasicReportKind::Continuation, other_source, 13
+    };
+
+    other_file_report.with_label(
+            mjolnir::Label{{13, 20}}
+                    .with_message("Initialized as nullptr here")
+                    .with_color(rang::fg::cyan)
+    );
+    other_file_report.print(std::cout);
 }
 
 void print_error(mjolnir::Source const &source) {
-    mjolnir::Report report{
-            mjolnir::BasicReportKind::Error, source,
-            "Shift operation on non-integral type(s)", 12
-    };
-    report.with_label(
-                  mjolnir::Label{{12, 13}}
-                          .with_color(rang::fg::green)
-                          .with_message("This is of type int")
-    )
+    mjolnir::Report report{mjolnir::BasicReportKind::Error, source, 12};
+    report.with_message("Shift operation on non-integral type(s)")
+            .with_label(
+                    mjolnir::Label{{12, 13}}
+                            .with_color(rang::fg::green)
+                            .with_message("This is of type int")
+            )
             .with_label(
                     mjolnir::Label{{17, 23}}
                             .with_color(rang::fg::magenta)
@@ -53,8 +58,6 @@ void print_error(mjolnir::Source const &source) {
 int main() {
     std::string buffer{
             R"(int value = 4 << 1337.f;
-        
-float *ptr = nullptr;
 
 void main() {
     *ptr = 40.f + 2.f;
