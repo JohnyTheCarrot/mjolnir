@@ -13,6 +13,8 @@ add_library(mjolnir STATIC
         src/report.cpp
         include/mjolnir/color.hpp
         src/color.cpp
+        src/report_printer.h
+        src/report_printer.cpp
 )
 target_include_directories(mjolnir PRIVATE include)
 
