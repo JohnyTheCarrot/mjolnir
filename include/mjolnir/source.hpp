@@ -81,8 +81,8 @@ namespace mjolnir {
     }// namespace internal
 
     class Source final {
-        std::string_view  name_;
-        std::string       buffer_;
+        std::string       name_;
+        std::string_view  buffer_;
         std::vector<Line> lines_;
 
     public:
