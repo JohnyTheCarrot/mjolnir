@@ -1,10 +1,7 @@
-#ifndef SPAN_H
-#define SPAN_H
+#ifndef MJOLNIR_SPAN_H
+#define MJOLNIR_SPAN_H
 
 #include <cstddef>
-#include <string>
-
-#include "rang.hpp"
 
 namespace mjolnir {
     class Label;
@@ -65,4 +62,4 @@ namespace mjolnir {
     }// namespace internal
 }// namespace mjolnir
 
-#endif//SPAN_H
+#endif//MJOLNIR_SPAN_H

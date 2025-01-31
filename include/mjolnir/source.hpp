@@ -1,5 +1,5 @@
-#ifndef SOURCE_H
-#define SOURCE_H
+#ifndef MJOLNIR_SOURCE_H
+#define MJOLNIR_SOURCE_H
 
 #include <cstdint>
 #include <optional>
@@ -8,13 +8,15 @@
 #include <string_view>
 #include <vector>
 
-#include "rang.hpp"
+#include "color.h"
 #include "span.hpp"
 
 namespace mjolnir {
     struct LabelDisplay final {
         std::optional<std::string> message_;
-        rang::fg                   color_{rang::fg::reset};
+        std::optional<Color>       color_{};
+
+        void print(std::ostream &os, std::string_view message) const;
     };
 
     class Label final {
@@ -32,7 +34,7 @@ namespace mjolnir {
 
         Label &with_message(std::string message);
 
-        Label &with_color(rang::fg color);
+        Label &with_color(Color color);
 
         [[nodiscard]]
         Span get_subspan(Span const &span) const noexcept;
@@ -117,4 +119,4 @@ struct std::hash<mjolnir::internal::SpannedLine> {
     ) const noexcept;
 };
 
-#endif//SOURCE_H
+#endif//MJOLNIR_SOURCE_H

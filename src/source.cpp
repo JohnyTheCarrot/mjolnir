@@ -1,7 +1,17 @@
+#include <algorithm>
 #include <mjolnir/source.hpp>
 #include <sstream>
 
 namespace mjolnir {
+    void LabelDisplay::print(std::ostream &os, std::string_view message) const {
+        if (color_.has_value()) {
+            os << color_.value().fg(message);
+            return;
+        }
+
+        os << message;
+    }
+
     Label::Label(Span const &span)
         : span_{span} {
     }
@@ -19,7 +29,7 @@ namespace mjolnir {
         return *this;
     }
 
-    Label &Label::with_color(rang::fg color) {
+    Label &Label::with_color(Color color) {
         display_.color_ = color;
         return *this;
     }

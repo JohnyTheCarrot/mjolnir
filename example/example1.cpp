@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iostream>
 #include <mjolnir/report.h>
 
 void print_warning(mjolnir::Source const &source) {
@@ -11,7 +12,7 @@ void print_warning(mjolnir::Source const &source) {
             .with_label(
                     mjolnir::Label{{44, 48}}
                             .with_message("Dereference occurs here")
-                            .with_color(rang::fg::cyan)
+                            .with_color(mjolnir::colors::light_cyan)
             );
 
     report.print(std::cout);
@@ -27,7 +28,7 @@ void print_warning(mjolnir::Source const &source) {
     other_file_report.with_label(
             mjolnir::Label{{13, 20}}
                     .with_message("Initialized as nullptr here")
-                    .with_color(rang::fg::cyan)
+                    .with_color(mjolnir::colors::light_cyan)
     );
     other_file_report.print(std::cout);
 }
@@ -37,12 +38,12 @@ void print_error(mjolnir::Source const &source) {
     report.with_message("Shift operation on non-integral type(s)")
             .with_label(
                     mjolnir::Label{{12, 13}}
-                            .with_color(rang::fg::green)
+                            .with_color(mjolnir::colors::light_green)
                             .with_message("This is of type int")
             )
             .with_label(
                     mjolnir::Label{{17, 23}}
-                            .with_color(rang::fg::magenta)
+                            .with_color(mjolnir::colors::light_magenta)
                             .with_message("This is of type float")
             )
             .with_code("E03")

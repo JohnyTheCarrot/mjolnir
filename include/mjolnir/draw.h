@@ -1,9 +1,7 @@
-#ifndef DRAW_H
-#define DRAW_H
+#ifndef MJOLNIR_DRAW_H
+#define MJOLNIR_DRAW_H
 
 #include <string>
-
-#include "rang.hpp"
 
 namespace mjolnir {
     struct Characters final {
@@ -70,11 +68,6 @@ namespace mjolnir {
                 .box_right_             = "]",
         };
     }// namespace characters
-
-    std::array constexpr colors{
-            rang::fg::red,  rang::fg::green,   rang::fg::yellow,
-            rang::fg::blue, rang::fg::magenta, rang::fg::cyan,
-    };
 }// namespace mjolnir
 
-#endif//DRAW_H
+#endif//MJOLNIR_DRAW_H

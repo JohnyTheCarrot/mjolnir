@@ -1,5 +1,5 @@
-#ifndef REPORT_H
-#define REPORT_H
+#ifndef MJOLNIR_REPORT_H
+#define MJOLNIR_REPORT_H
 
 #include <optional>
 #include <set>
@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 
+#include "color.h"
 #include "draw.h"
 #include "source.hpp"
 #include "span.hpp"
@@ -16,14 +17,14 @@ namespace mjolnir {
 
     struct CustomReportKind final {
         std::string name;
-        rang::fg    color;
+        Color       color;
     };
 
     using ReportKind = std::variant<BasicReportKind, CustomReportKind>;
 
     namespace report_kind {
         [[nodiscard]]
-        rang::fg to_color(ReportKind const &kind);
+        Color to_color(ReportKind const &kind);
 
         [[nodiscard]]
         std::string_view to_string(ReportKind const &kind);
@@ -69,4 +70,4 @@ namespace mjolnir {
     };
 }// namespace mjolnir
 
-#endif//REPORT_H
+#endif//MJOLNIR_REPORT_H

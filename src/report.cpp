@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <mjolnir/report.h>
 #include <sstream>
@@ -5,17 +6,17 @@
 
 namespace mjolnir {
     namespace report_kind {
-        rang::fg to_color(ReportKind const &kind) {
+        Color to_color(ReportKind const &kind) {
             if (std::holds_alternative<BasicReportKind>(kind)) {
                 switch (std::get<BasicReportKind>(kind)) {
                     case BasicReportKind::Error:
-                        return rang::fg::red;
+                        return colors::light_red;
                     case BasicReportKind::Warning:
-                        return rang::fg::yellow;
+                        return colors::light_yellow;
                     case BasicReportKind::Advice:
-                        return rang::fg::cyan;
-                    default:
-                        return rang::fg::reset;
+                        return colors::light_cyan;
+                    case BasicReportKind::Continuation:
+                        return colors::red;// not that it's used, but whatever
                 }
                 throw std::logic_error{"unreachable"};
             }
@@ -181,8 +182,8 @@ namespace mjolnir {
         void print_non_code_line_start() const {
             auto const &characters{get_characters()};
 
-            *os_ << line_number_space_ << rang::fg::gray
-                 << characters.vertical_interruption_ << rang::fg::reset
+            *os_ << line_number_space_
+                 << colors::gray.fg(characters.vertical_interruption_)
                  << padding_after_vert_bar_str_;
         }
 
@@ -197,8 +198,7 @@ namespace mjolnir {
                 return;
             }
 
-            *os_ << label_ptr->get_display().color_ << content
-                 << rang::fg::reset;
+            label_ptr->get_display().print(*os_, content);
         }
 
         void print_highlight(internal::ColoredSpan const &colored_span) const {
@@ -226,9 +226,10 @@ namespace mjolnir {
                 return highlight;
             }()};
 
-            *os_ << label_ptr->get_display().color_ << highlight_left
-                 << characters.highlight_center_ << highlight_right
-                 << rang::fg::reset;
+            label_ptr->get_display().print(
+                    *os_, highlight_left + characters.highlight_center_ +
+                                  highlight_right
+            );
         }
 
         void
@@ -254,7 +255,8 @@ namespace mjolnir {
                     line_pos += span_it->span_.size();
 
                     auto const &display{label_ptr->get_display()};
-                    *os_ << display.color_ << characters.line_bottom_left_;
+                    *os_ << display.color_->fg_start()
+                         << characters.line_bottom_left_;
 
                     auto const max_span_end{spanned_line.max_span_end()};
                     for (auto current_offset{line_pos};
@@ -265,10 +267,7 @@ namespace mjolnir {
                         *os_ << characters.horizontal_bar_;
                     }
 
-                    if (display.message_.has_value()) {
-                        *os_ << rang::fg::reset << ' '
-                             << display.message_.value();
-                    }
+                    *os_ << Color::end << ' ' << display.message_.value();
                 }
 
                 end_line();
@@ -289,8 +288,9 @@ namespace mjolnir {
                     *os_ << std::string(rest_line_padding + center_offset, ' ');
                     rest_line_padding = rest_span.size() - 1;
 
-                    *os_ << rest_label_ptr->get_display().color_
-                         << characters.vertical_bar_;
+                    *os_ << rest_label_ptr->get_display().color_->fg(
+                            characters.vertical_bar_
+                    );
                 }
                 end_line();
             }
@@ -350,11 +350,11 @@ namespace mjolnir {
             if (std::holds_alternative<BasicReportKind>(report_->kind_) &&
                 std::get<BasicReportKind>(report_->kind_) !=
                         BasicReportKind::Continuation) {
-                *os_ << color;
+                *os_ << color.fg_start();
                 if (report_->code_.has_value()) {
                     *os_ << '[' << report_->code_.value() << "] ";
                 }
-                *os_ << kind << rang::fg::reset;
+                *os_ << kind << Color::end;
                 if (report_->message_.has_value()) {
                     *os_ << ": " << report_->message_.value();
                 }
@@ -407,7 +407,8 @@ namespace mjolnir {
         void print_help() const {
             for (auto const &help : report_->help_) {
                 print_non_code_line_start();
-                *os_ << rang::fg::cyan << "Help: " << rang::fg::reset << help;
+                *os_ << colors::light_blue.fg_start() << "Help: " << Color::end
+                     << help;
                 end_line();
             }
         }
