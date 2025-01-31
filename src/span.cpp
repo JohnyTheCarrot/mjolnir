@@ -45,6 +45,10 @@ namespace mjolnir {
         return *this;
     }
 
+    void Span::expand(std::size_t by) {
+        end_ += by;
+    }
+
     bool Span::is_multiline(Source const &source) const noexcept {
         auto const start_line{source.get_line_info(start_)};
         auto const end_line{source.get_line_info(end_)};

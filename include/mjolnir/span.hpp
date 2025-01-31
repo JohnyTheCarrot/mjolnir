@@ -35,6 +35,8 @@ namespace mjolnir {
 
         Span &operator+=(Span const &other);
 
+        void expand(std::size_t by = 1);
+
         [[nodiscard]]
         bool is_multiline(Source const &source) const noexcept;
 
