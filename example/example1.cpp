@@ -20,7 +20,7 @@ void print_warning(mjolnir::Source const &source) {
 
     std::string buffer{"float *ptr = nullptr;"};
 
-    mjolnir::Source const other_source{"incl.h", std::move(buffer)};
+    mjolnir::Source const other_source{"incl.h", buffer};
     mjolnir::Report       other_file_report{
             mjolnir::BasicReportKind::Continuation, other_source, 13
     };
@@ -67,7 +67,7 @@ void main() {
 )"
     };
 
-    mjolnir::Source const source{"test.c", std::move(buffer)};
+    mjolnir::Source const source{"test.c", buffer};
 
     print_error(source);
     print_warning(source);

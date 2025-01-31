@@ -108,9 +108,9 @@ namespace mjolnir {
         return max_span_end - line_.byte_offset_;
     }
 
-    Source::Source(std::string name, std::string buffer)
+    Source::Source(std::string name, std::string_view buffer)
         : name_{std::move(name)}
-        , buffer_{std::move(buffer)}
+        , buffer_{buffer}
         , lines_{[this] {
             std::vector<Line> lines;
 
@@ -129,11 +129,12 @@ namespace mjolnir {
 
                 auto const old_offset{std::distance(buffer_.cbegin(), last)};
                 auto const length{std::distance(last, line_it)};
-                lines.emplace_back(Line{
-                        .byte_offset_ = static_cast<std::size_t>(old_offset),
-                        .byte_length_ = static_cast<std::size_t>(length),
-                        .line_number_ = lines.size() + 1
-                });
+                lines.emplace_back(
+                        Line{.byte_offset_ =
+                                     static_cast<std::size_t>(old_offset),
+                             .byte_length_ = static_cast<std::size_t>(length),
+                             .line_number_ = lines.size() + 1}
+                );
 
                 last = line_it + 1;
             }

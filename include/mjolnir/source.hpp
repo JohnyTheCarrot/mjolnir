@@ -81,12 +81,12 @@ namespace mjolnir {
     }// namespace internal
 
     class Source final {
-        std::string       name_;
+        std::string_view  name_;
         std::string       buffer_;
         std::vector<Line> lines_;
 
     public:
-        Source(std::string name, std::string buffer);
+        Source(std::string name, std::string_view buffer);
 
         [[nodiscard]]
         std::string_view get_name() const noexcept;
