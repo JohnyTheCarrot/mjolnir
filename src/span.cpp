@@ -36,6 +36,15 @@ namespace mjolnir {
         return start_ < other.start_;
     }
 
+    Span Span::operator+(Span const &other) const {
+        return Span{std::min(start_, other.start_), std::max(end_, other.end_)};
+    }
+
+    Span &Span::operator+=(Span const &other) {
+        *this = *this + other;
+        return *this;
+    }
+
     bool Span::is_multiline(Source const &source) const noexcept {
         auto const start_line{source.get_line_info(start_)};
         auto const end_line{source.get_line_info(end_)};
@@ -76,7 +85,8 @@ namespace mjolnir {
                    label_ptr_->get_display().message_.has_value();
         }
 
-        bool ColoredSpan::is_single_line_highlightable(Source const &source
+        bool ColoredSpan::is_single_line_highlightable(
+                Source const &source
         ) const noexcept {
             return label_ptr_ != nullptr && !span_.is_multiline(source);
         }

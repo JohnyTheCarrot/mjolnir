@@ -31,6 +31,11 @@ namespace mjolnir {
         bool operator<(Span const &other) const noexcept;
 
         [[nodiscard]]
+        Span operator+(Span const &other) const;
+
+        Span &operator+=(Span const &other);
+
+        [[nodiscard]]
         bool is_multiline(Source const &source) const noexcept;
 
         void verify_validity(Source const &source) const;
