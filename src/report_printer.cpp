@@ -116,8 +116,8 @@ namespace mjolnir {
         label_ptr->get_display().print(*os_, content);
     }
 
-    void
-    ReportPrinter::print_highlight(internal::ColoredSpan const &colored_span
+    void ReportPrinter::print_highlight(
+            internal::ColoredSpan const &colored_span
     ) const {
         auto const &characters{get_characters()};
         auto const &[span, label_ptr]{colored_span};
@@ -158,7 +158,8 @@ namespace mjolnir {
              span_it != colored_spans.cend(); ++span_it) {
             auto const &[span, label_ptr]{*span_it};
 
-            if (!span_it->is_single_line_highlightable(*report_->source_)) {
+            if (!span_it->is_highlight() ||
+                !span_it->is_single_line_highlightable(*report_->source_)) {
                 line_pos += span.size();
                 continue;
             }
@@ -211,8 +212,8 @@ namespace mjolnir {
         }
     }
 
-    void
-    ReportPrinter::print_highlights(internal::SpannedLine const &spanned_line
+    void ReportPrinter::print_highlights(
+            internal::SpannedLine const &spanned_line
     ) const {
         auto const &[line, colored_spans]{spanned_line};
 
@@ -238,8 +239,8 @@ namespace mjolnir {
         print_highlight_lines(spanned_line);
     }
 
-    void ReportPrinter::print_line(internal::SpannedLine const &spanned_line
-    ) const {
+    void
+    ReportPrinter::print_line(internal::SpannedLine const &spanned_line) const {
         for (auto const &[line, colored_spans]{spanned_line};
              auto const &colored_span : colored_spans) {
             print_line_segment(line, colored_span);
