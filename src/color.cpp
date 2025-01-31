@@ -1,5 +1,8 @@
-#include <mjolnir/color.h>
-#include <sstream>
+#include <format>           // for format
+#include <mjolnir/color.hpp>// for Color
+#include <sstream>          // for char_traits, basic_ostream, basic_strin...
+#include <string>           // for allocator, operator<<, string
+#include <string_view>      // for operator<<, string_view
 
 namespace mjolnir {
     std::string Color::fg(std::string_view message) const {

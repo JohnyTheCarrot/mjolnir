@@ -1,8 +1,23 @@
-#include <algorithm>
-#include <cassert>
-#include <mjolnir/report.h>
-#include <sstream>
-#include <utility>
+#include <algorithm>         // for __max_element_fn, max_element
+#include <cassert>           // for assert
+#include <cstddef>           // for size_t
+#include <format>            // for format
+#include <iterator>          // for next
+#include <mjolnir/report.hpp>// for Report, BasicReportKind, CustomReportKind
+#include <optional>          // for optional
+#include <set>               // for set, _Rb_tree_const_iterator, operator==
+#include <sstream>           // for basic_ostream, char_traits, operator<<
+#include <stdexcept>         // for logic_error, out_of_range
+#include <string>            // for operator<<, allocator, string, to_string
+#include <string_view>       // for operator<<, string_view
+#include <utility>           // for move, as_const
+#include <variant>           // for get, holds_alternative
+#include <vector>            // for vector
+
+#include "mjolnir/color.hpp" // for Color, gray, light_blue, light_cyan
+#include "mjolnir/draw.hpp"  // for Characters
+#include "mjolnir/source.hpp"// for SpannedLine, Line, Label, Source, Labe...
+#include "mjolnir/span.hpp"  // for ColoredSpan, Span
 
 namespace mjolnir {
     namespace report_kind {
@@ -232,8 +247,8 @@ namespace mjolnir {
             );
         }
 
-        void
-        print_highlight_lines(internal::SpannedLine const &spanned_line) const {
+        void print_highlight_lines(internal::SpannedLine const &spanned_line
+        ) const {
             auto const &characters{get_characters()};
             auto const &[line, colored_spans]{spanned_line};
 

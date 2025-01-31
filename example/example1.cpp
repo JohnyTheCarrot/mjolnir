@@ -1,6 +1,6 @@
 #include <fstream>
 #include <iostream>
-#include <mjolnir/report.h>
+#include <mjolnir/report.hpp>
 
 void print_warning(mjolnir::Source const &source) {
     mjolnir::Report report{mjolnir::BasicReportKind::Warning, source, 44};

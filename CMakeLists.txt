@@ -8,10 +8,10 @@ add_library(mjolnir STATIC
         include/mjolnir/span.hpp
         src/source.cpp
         include/mjolnir/source.hpp
-        include/mjolnir/draw.h
-        include/mjolnir/report.h
+        include/mjolnir/draw.hpp
+        include/mjolnir/report.hpp
         src/report.cpp
-        include/mjolnir/color.h
+        include/mjolnir/color.hpp
         src/color.cpp
 )
 target_include_directories(mjolnir PRIVATE include)

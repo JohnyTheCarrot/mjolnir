@@ -7,8 +7,8 @@
 #include <variant>
 #include <vector>
 
-#include "color.h"
-#include "draw.h"
+#include "color.hpp"
+#include "draw.hpp"
 #include "source.hpp"
 #include "span.hpp"
 

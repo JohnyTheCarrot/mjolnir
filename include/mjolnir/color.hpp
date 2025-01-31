@@ -1,9 +1,9 @@
 #ifndef MJOLNIR_COLOR_H
 #define MJOLNIR_COLOR_H
 
-#include <cstdint>
-#include <ostream>
-#include <string>
+#include <cstdint>      // for uint8_t, uint32_t
+#include <string>       // for string
+#include <string_view>  // for string_view
 
 namespace mjolnir {
     class Color final {

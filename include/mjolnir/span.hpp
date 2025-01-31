@@ -1,8 +1,6 @@
 #ifndef MJOLNIR_SPAN_H
 #define MJOLNIR_SPAN_H
 
-#include <cstddef>
-
 namespace mjolnir {
     class Label;
     class Source;

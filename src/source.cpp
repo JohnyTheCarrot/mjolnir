@@ -1,6 +1,18 @@
-#include <algorithm>
-#include <mjolnir/source.hpp>
-#include <sstream>
+#include <algorithm>         // for max, min, upper_bound, __any_of_fn
+#include <cstddef>           // for size_t
+#include <functional>        // for hash
+#include <iterator>          // for distance, next
+#include <mjolnir/source.hpp>// for Line, Source, SpannedLine, Label, Labe...
+#include <optional>          // for optional, nullopt, nullopt_t
+#include <set>               // for operator==, set, _Rb_tree_const_iterator
+#include <sstream>           // for basic_ostream, char_traits, ostream
+#include <string>            // for basic_string, string, operator<<
+#include <string_view>       // for string_view, operator<<
+#include <utility>           // for move
+#include <vector>            // for vector
+
+#include "mjolnir/color.hpp"// for Color
+#include "mjolnir/span.hpp" // for Span, ColoredSpan
 
 namespace mjolnir {
     void LabelDisplay::print(std::ostream &os, std::string_view message) const {
@@ -117,12 +129,11 @@ namespace mjolnir {
 
                 auto const old_offset{std::distance(buffer_.cbegin(), last)};
                 auto const length{std::distance(last, line_it)};
-                lines.emplace_back(
-                        Line{.byte_offset_ =
-                                     static_cast<std::size_t>(old_offset),
-                             .byte_length_ = static_cast<std::size_t>(length),
-                             .line_number_ = lines.size() + 1}
-                );
+                lines.emplace_back(Line{
+                        .byte_offset_ = static_cast<std::size_t>(old_offset),
+                        .byte_length_ = static_cast<std::size_t>(length),
+                        .line_number_ = lines.size() + 1
+                });
 
                 last = line_it + 1;
             }

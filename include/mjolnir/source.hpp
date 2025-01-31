@@ -8,7 +8,7 @@
 #include <string_view>
 #include <vector>
 
-#include "color.h"
+#include "color.hpp"
 #include "span.hpp"
 
 namespace mjolnir {

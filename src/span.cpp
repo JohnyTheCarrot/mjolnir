@@ -1,7 +1,10 @@
-#include <cmath>
-#include <format>
-#include <mjolnir/source.hpp>
-#include <mjolnir/span.hpp>
+#include <algorithm>         // for max
+#include <cmath>             // for ceil
+#include <cstddef>           // for size_t
+#include <mjolnir/source.hpp>// for Source, Line, Label, LabelDisplay
+#include <mjolnir/span.hpp>  // for Span, ColoredSpan
+#include <optional>          // for optional
+#include <stdexcept>         // for out_of_range
 
 namespace mjolnir {
     Span::Span(std::size_t start, std::size_t end)
@@ -45,8 +48,7 @@ namespace mjolnir {
 
     void Span::verify_validity(Source const &source) const {
         if (start_ >= source.size() || end_ > source.size() || start_ >= end_) {
-            throw std::out_of_range{
-                    "Span is out of range of the source buffer"
+            throw std::out_of_range{"Span is out of range of the source buffer"
             };
         }
     }
@@ -74,8 +76,7 @@ namespace mjolnir {
                    label_ptr_->get_display().message_.has_value();
         }
 
-        bool ColoredSpan::is_single_line_highlightable(
-                Source const &source
+        bool ColoredSpan::is_single_line_highlightable(Source const &source
         ) const noexcept {
             return label_ptr_ != nullptr && !span_.is_multiline(source);
         }
