@@ -49,6 +49,14 @@ namespace mjolnir {
         end_ += by;
     }
 
+    void Span::set_end(std::size_t end) {
+        if (end < start_) {
+            throw std::invalid_argument{"End cannot be less than start"};
+        }
+
+        end_ = end;
+    }
+
     bool Span::is_multiline(Source const &source) const noexcept {
         auto const start_line{source.get_line_info(start_)};
         auto const end_line{source.get_line_info(end_)};

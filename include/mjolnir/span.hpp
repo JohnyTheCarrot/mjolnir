@@ -37,6 +37,8 @@ namespace mjolnir {
 
         void expand(std::size_t by = 1);
 
+        void set_end(std::size_t end);
+
         [[nodiscard]]
         bool is_multiline(Source const &source) const noexcept;
 
