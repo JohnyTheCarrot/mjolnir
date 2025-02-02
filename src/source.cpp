@@ -74,7 +74,7 @@ namespace mjolnir {
     }
 
     std::size_t Line::get_column(std::size_t offset) const noexcept {
-        return offset - byte_offset_;
+        return offset - byte_offset_ + 1;
     }
 
     bool internal::SpannedLine::operator==(SpannedLine const &other) const {
