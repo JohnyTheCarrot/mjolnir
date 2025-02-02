@@ -68,7 +68,11 @@ namespace mjolnir {
     }
 
     void Span::verify_validity(Source const &source) const {
-        if (start_ >= source.size() || end_ > source.size() || start_ >= end_) {
+        if (start_ == end_) {
+            throw std::invalid_argument{"Span cannot be empty"};
+        }
+
+        if (start_ >= source.size() || end_ > source.size()) {
             throw std::out_of_range{"Span is out of range of the source buffer"
             };
         }
