@@ -1,8 +1,11 @@
 #ifndef MJOLNIR_SPAN_H
 #define MJOLNIR_SPAN_H
 
+#include <cstdint>
+
 namespace mjolnir {
     class Label;
+
     class Source;
 
     class Span final {
