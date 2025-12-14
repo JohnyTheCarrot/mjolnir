@@ -16,7 +16,7 @@ add_library(mjolnir STATIC
         src/report_printer.h
         src/report_printer.cpp
 )
-target_include_directories(mjolnir PRIVATE include)
+target_include_directories(mjolnir PUBLIC include)
 
 add_executable(example1
         example/example1.cpp
